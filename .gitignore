@@ -1,0 +1,9 @@
+*.x
+*.o
+.DS_Store
+__pycache__/
+llvm_pass_profiling/pass/build/
+llvm_pass_profiling/benchmarks/stencil.opt.yaml
+llvm_pass_profiling/benchmarks/perf.data
+llvm_pass_profiling/benchmarks/.mca_*
+llvm_pass_profiling/report.md

@@ -5,6 +5,7 @@
 ![CUDA](https://img.shields.io/badge/CUDA-76B900?style=flat-square&logo=nvidia&logoColor=white)
 ![OpenMP](https://img.shields.io/badge/OpenMP-006DB8?style=flat-square&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
+![LLVM](https://img.shields.io/badge/LLVM-262D3A?style=flat-square&logo=llvm&logoColor=white)
 
 Performance-focused projects targeting cache behaviour, memory bandwidth, and GPU throughput. Each project includes benchmarks and profiling results.
 
@@ -44,6 +45,23 @@ nvcc -O3 -arch=sm_70 -o fft_gpu.x main_v2.cu && ./fft_gpu.x <N>
 
 # Cluster
 sbatch slurm.sh
+```
+
+### llvm_pass_profiling
+Out-of-tree LLVM analysis pass (`LoopStridePass`) that classifies every
+load/store in a loop by its memory stride using ScalarEvolution — unit-stride,
+strided, or gather/scatter — and predicts vectorisability before the
+vectoriser runs. Validated against clang's own `-Rpass=loop-vectorize`
+remarks, `llvm-mca` throughput models, and measured bandwidth on a 3-point
+Jacobi stencil: the strided variant runs ~11x slower than unit-stride purely
+from cache-line waste, and the gather variant loses ~30% purely from unproven
+vectorisation. Pass plugin runs under `clang -fpass-plugin` or `opt`.
+
+```bash
+cd llvm_pass_profiling
+scripts/build_pass.sh   # needs LLVM dev libs (brew install llvm / module load llvm)
+scripts/stride.sh       # per-loop stride report
+scripts/remarks.sh && scripts/mca.sh
 ```
 
 ### leonardo_booster

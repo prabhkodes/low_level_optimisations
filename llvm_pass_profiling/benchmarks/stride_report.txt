@@ -1,0 +1,97 @@
+[loop-stride] function 'stencil_unit'
+  loop at line 32 (depth 1)
+    load  8 B: unit stride (8 B/iter)
+    load  8 B: unit stride (8 B/iter)
+    store 8 B: unit stride (8 B/iter)
+    verdict: 3/3 affine, 3/3 unit-stride -> contiguous, vectorisation-friendly
+[loop-stride] function 'stencil_strided'
+  loop at line 40 (depth 1)
+    load  8 B: strided (64 B/iter = 8 elems)
+    load  8 B: strided (64 B/iter = 8 elems)
+    load  8 B: strided (64 B/iter = 8 elems)
+    store 8 B: strided (64 B/iter = 8 elems)
+    verdict: 4/4 affine, 0/4 unit-stride -> affine but strided, expect poor cache-line utilisation
+  loop at line 40 (depth 1)
+    load  8 B: strided (64 B/iter = 8 elems)
+    load  8 B: strided (64 B/iter = 8 elems)
+    load  8 B: strided (64 B/iter = 8 elems)
+    store 8 B: strided (64 B/iter = 8 elems)
+    verdict: 4/4 affine, 0/4 unit-stride -> affine but strided, expect poor cache-line utilisation
+  loop at line 40 (depth 1)
+    load  8 B: strided (64 B/iter = 8 elems)
+    load  8 B: strided (64 B/iter = 8 elems)
+    load  8 B: strided (64 B/iter = 8 elems)
+    store 8 B: strided (64 B/iter = 8 elems)
+    verdict: 4/4 affine, 0/4 unit-stride -> affine but strided, expect poor cache-line utilisation
+  loop at line 40 (depth 1)
+    load  8 B: strided (64 B/iter = 8 elems)
+    load  8 B: strided (64 B/iter = 8 elems)
+    load  8 B: strided (64 B/iter = 8 elems)
+    store 8 B: strided (64 B/iter = 8 elems)
+    verdict: 4/4 affine, 0/4 unit-stride -> affine but strided, expect poor cache-line utilisation
+  loop at line 40 (depth 1)
+    load  8 B: strided (64 B/iter = 8 elems)
+    load  8 B: strided (64 B/iter = 8 elems)
+    load  8 B: strided (64 B/iter = 8 elems)
+    store 8 B: strided (64 B/iter = 8 elems)
+    verdict: 4/4 affine, 0/4 unit-stride -> affine but strided, expect poor cache-line utilisation
+  loop at line 40 (depth 1)
+    load  8 B: strided (64 B/iter = 8 elems)
+    load  8 B: strided (64 B/iter = 8 elems)
+    load  8 B: strided (64 B/iter = 8 elems)
+    store 8 B: strided (64 B/iter = 8 elems)
+    verdict: 4/4 affine, 0/4 unit-stride -> affine but strided, expect poor cache-line utilisation
+  loop at line 40 (depth 1)
+    load  8 B: strided (64 B/iter = 8 elems)
+    load  8 B: strided (64 B/iter = 8 elems)
+    load  8 B: strided (64 B/iter = 8 elems)
+    store 8 B: strided (64 B/iter = 8 elems)
+    verdict: 4/4 affine, 0/4 unit-stride -> affine but strided, expect poor cache-line utilisation
+  loop at line 40 (depth 1)
+    load  8 B: strided (64 B/iter = 8 elems)
+    load  8 B: strided (64 B/iter = 8 elems)
+    load  8 B: strided (64 B/iter = 8 elems)
+    store 8 B: strided (64 B/iter = 8 elems)
+    verdict: 4/4 affine, 0/4 unit-stride -> affine but strided, expect poor cache-line utilisation
+[loop-stride] function 'stencil_gather'
+  loop at line 46 (depth 1)
+    load  8 B: unit stride (8 B/iter)
+    load  8 B: irregular (non-affine, gather/scatter)
+    load  8 B: irregular (non-affine, gather/scatter)
+    load  8 B: irregular (non-affine, gather/scatter)
+    store 8 B: irregular (non-affine, gather/scatter)
+    verdict: 1/5 affine, 1/5 unit-stride -> contains gather/scatter, hard to vectorise
+[loop-stride] function 'main'
+  loop at line 66 (depth 1)
+    store 8 B: unit stride (8 B/iter)
+    store 8 B: unit stride (8 B/iter)
+    verdict: 2/2 affine, 2/2 unit-stride -> contiguous, vectorisation-friendly
+  loop at line 72 (depth 1)
+    store 8 B: unit stride (8 B/iter)
+    verdict: 1/1 affine, 1/1 unit-stride -> contiguous, vectorisation-friendly
+  loop at line 80 (depth 1)
+    load  8 B: loop-invariant address
+    load  8 B: loop-invariant address
+    load  4 B: strided (16 B/iter = 4 elems)
+    load  8 B: loop-invariant address
+    load  8 B: loop-invariant address
+    load  8 B: strided (16 B/iter = 2 elems)
+    verdict: 2/6 affine, 0/6 unit-stride -> contains gather/scatter, hard to vectorise
+  loop at line 83 (depth 2)
+    load  8 B: loop-invariant address
+    verdict: 0/1 affine, 0/1 unit-stride -> contains gather/scatter, hard to vectorise
+  loop at line 46 (depth 3)
+    load  8 B: unit stride (8 B/iter)
+    load  8 B: irregular (non-affine, gather/scatter)
+    load  8 B: irregular (non-affine, gather/scatter)
+    load  8 B: irregular (non-affine, gather/scatter)
+    store 8 B: irregular (non-affine, gather/scatter)
+    verdict: 1/5 affine, 1/5 unit-stride -> contains gather/scatter, hard to vectorise
+  loop at line 32 (depth 3)
+    load  8 B: unit stride (8 B/iter)
+    load  8 B: unit stride (8 B/iter)
+    store 8 B: unit stride (8 B/iter)
+    verdict: 3/3 affine, 3/3 unit-stride -> contiguous, vectorisation-friendly
+  loop at line 54 (depth 2)
+    load  8 B: unit stride (8 B/iter)
+    verdict: 1/1 affine, 1/1 unit-stride -> contiguous, vectorisation-friendly

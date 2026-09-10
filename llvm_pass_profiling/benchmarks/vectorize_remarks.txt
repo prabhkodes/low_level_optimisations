@@ -1,0 +1,63 @@
+kernel/stencil.c:32:5: remark: vectorized loop (vectorization width: 2, interleaved count: 4) [-Rpass=loop-vectorize]
+   32 |     for (long i = 1; i < n - 1; i++)
+      |     ^
+kernel/stencil.c:40:9: remark: the cost-model indicates that vectorization is not beneficial [-Rpass-analysis=loop-vectorize]
+   40 |         for (long i = (s == 0 ? STRIDE : s); i < n - 1; i += STRIDE)
+      |         ^
+kernel/stencil.c:40:9: remark: interleaved loop (interleaved count: 4) [-Rpass=loop-vectorize]
+kernel/stencil.c:40:9: remark: the cost-model indicates that vectorization is not beneficial [-Rpass-analysis=loop-vectorize]
+kernel/stencil.c:40:9: remark: interleaved loop (interleaved count: 4) [-Rpass=loop-vectorize]
+kernel/stencil.c:40:9: remark: the cost-model indicates that vectorization is not beneficial [-Rpass-analysis=loop-vectorize]
+kernel/stencil.c:40:9: remark: interleaved loop (interleaved count: 4) [-Rpass=loop-vectorize]
+kernel/stencil.c:40:9: remark: the cost-model indicates that vectorization is not beneficial [-Rpass-analysis=loop-vectorize]
+kernel/stencil.c:40:9: remark: interleaved loop (interleaved count: 4) [-Rpass=loop-vectorize]
+kernel/stencil.c:40:9: remark: the cost-model indicates that vectorization is not beneficial [-Rpass-analysis=loop-vectorize]
+kernel/stencil.c:40:9: remark: interleaved loop (interleaved count: 4) [-Rpass=loop-vectorize]
+kernel/stencil.c:40:9: remark: the cost-model indicates that vectorization is not beneficial [-Rpass-analysis=loop-vectorize]
+kernel/stencil.c:40:9: remark: interleaved loop (interleaved count: 4) [-Rpass=loop-vectorize]
+kernel/stencil.c:40:9: remark: the cost-model indicates that vectorization is not beneficial [-Rpass-analysis=loop-vectorize]
+kernel/stencil.c:40:9: remark: interleaved loop (interleaved count: 4) [-Rpass=loop-vectorize]
+kernel/stencil.c:40:9: remark: the cost-model indicates that vectorization is not beneficial [-Rpass-analysis=loop-vectorize]
+kernel/stencil.c:40:9: remark: interleaved loop (interleaved count: 4) [-Rpass=loop-vectorize]
+kernel/stencil.c:46:5: remark: the cost-model indicates that vectorization is not beneficial [-Rpass-analysis=loop-vectorize]
+   46 |     for (long i = 1; i < n - 1; i++) {
+      |     ^
+kernel/stencil.c:46:5: remark: interleaved loop (interleaved count: 4) [-Rpass=loop-vectorize]
+kernel/stencil.c:67:26: remark: loop not vectorized: call instruction cannot be vectorized [-Rpass-analysis=loop-vectorize]
+   67 |         in[i]  = (double)rand() / RAND_MAX;
+      |                          ^
+kernel/stencil.c:66:5: remark: loop not vectorized: instruction cannot be vectorized [-Rpass-analysis=loop-vectorize]
+   66 |     for (long i = 0; i < n; i++) {
+      |     ^
+kernel/stencil.c:66:5: remark: loop not vectorized [-Rpass-missed=loop-vectorize]
+kernel/stencil.c:72:5: remark: vectorized loop (vectorization width: 2, interleaved count: 4) [-Rpass=loop-vectorize]
+   72 |     for (long i = 0; i < n; i++) idx[i] = i;
+      |     ^
+kernel/stencil.c:54:5: remark: vectorized loop (vectorization width: 2, interleaved count: 4) [-Rpass=loop-vectorize]
+   54 |     for (long i = 0; i < n; i++) s += a[i];
+      |     ^
+kernel/stencil.c:32:5: remark: vectorized loop (vectorization width: 2, interleaved count: 4) [-Rpass=loop-vectorize]
+   32 |     for (long i = 1; i < n - 1; i++)
+      |     ^
+kernel/stencil.c:40:9: remark: the cost-model indicates that vectorization is not beneficial [-Rpass-analysis=loop-vectorize]
+   40 |         for (long i = (s == 0 ? STRIDE : s); i < n - 1; i += STRIDE)
+      |         ^
+kernel/stencil.c:40:9: remark: interleaved loop (interleaved count: 4) [-Rpass=loop-vectorize]
+kernel/stencil.c:40:9: remark: the cost-model indicates that vectorization is not beneficial [-Rpass-analysis=loop-vectorize]
+kernel/stencil.c:40:9: remark: interleaved loop (interleaved count: 4) [-Rpass=loop-vectorize]
+kernel/stencil.c:40:9: remark: the cost-model indicates that vectorization is not beneficial [-Rpass-analysis=loop-vectorize]
+kernel/stencil.c:40:9: remark: interleaved loop (interleaved count: 4) [-Rpass=loop-vectorize]
+kernel/stencil.c:40:9: remark: the cost-model indicates that vectorization is not beneficial [-Rpass-analysis=loop-vectorize]
+kernel/stencil.c:40:9: remark: interleaved loop (interleaved count: 4) [-Rpass=loop-vectorize]
+kernel/stencil.c:40:9: remark: the cost-model indicates that vectorization is not beneficial [-Rpass-analysis=loop-vectorize]
+kernel/stencil.c:40:9: remark: interleaved loop (interleaved count: 4) [-Rpass=loop-vectorize]
+kernel/stencil.c:40:9: remark: the cost-model indicates that vectorization is not beneficial [-Rpass-analysis=loop-vectorize]
+kernel/stencil.c:40:9: remark: interleaved loop (interleaved count: 4) [-Rpass=loop-vectorize]
+kernel/stencil.c:40:9: remark: the cost-model indicates that vectorization is not beneficial [-Rpass-analysis=loop-vectorize]
+kernel/stencil.c:40:9: remark: interleaved loop (interleaved count: 4) [-Rpass=loop-vectorize]
+kernel/stencil.c:40:9: remark: the cost-model indicates that vectorization is not beneficial [-Rpass-analysis=loop-vectorize]
+kernel/stencil.c:40:9: remark: interleaved loop (interleaved count: 4) [-Rpass=loop-vectorize]
+kernel/stencil.c:46:5: remark: the cost-model indicates that vectorization is not beneficial [-Rpass-analysis=loop-vectorize]
+   46 |     for (long i = 1; i < n - 1; i++) {
+      |     ^
+kernel/stencil.c:46:5: remark: interleaved loop (interleaved count: 4) [-Rpass=loop-vectorize]

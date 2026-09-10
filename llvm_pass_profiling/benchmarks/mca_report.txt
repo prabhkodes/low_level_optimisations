@@ -1,0 +1,42 @@
+=== stencil_unit (-O3, native) ===
+Iterations:        300
+Instructions:      18000
+Total Cycles:      3695
+Total uOps:        20400
+
+Dispatch Width:    6
+uOps Per Cycle:    5.52
+IPC:               4.87
+Block RThroughput: 11.3
+
+
+Instruction Info:
+
+=== stencil_strided (-O3, native) ===
+Iterations:        300
+Instructions:      145800
+Total Cycles:      29733
+Total uOps:        160200
+
+Dispatch Width:    6
+uOps Per Cycle:    5.39
+IPC:               4.90
+Block RThroughput: 89.0
+
+
+Instruction Info:
+
+=== stencil_gather (-O3, native) ===
+Iterations:        300
+Instructions:      20700
+Total Cycles:      5393
+Total uOps:        24600
+
+Dispatch Width:    6
+uOps Per Cycle:    4.56
+IPC:               3.84
+Block RThroughput: 14.0
+
+
+Instruction Info:
+
