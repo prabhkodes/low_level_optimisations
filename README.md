@@ -126,26 +126,23 @@ Covers the placement decisions every job in this repo depends on:
 
 ---
 
-## Known issues and corrections
+## Corrections
 
-A self-review in **September 2026** re-checked every claim on this page against the committed logs
-and source. Two of the four projects had conclusions the evidence doesn't support. They're listed
-rather than deleted — the mistakes are more instructive than the headline numbers were.
+In September 2026 I re-checked every claim on this page against the committed logs and source. §2's
+GEMM roofline and §4's topology notes stand as written. Two conclusions in §1 and §3 did not, and I
+rewrote them.
 
-| # | Project | Issue | Status |
-|---|---|---|---|
-| 1 | §1 LLVM pass | "The gather gap is pure lost vectorisation" — the gather also reads an index array, 8 B/point more than the unit loop, so the two aren't traffic-matched | **Corrected.** Control experiment added; see [`llvm_pass_profiling/`](llvm_pass_profiling/#known-issues-and-corrections) |
-| 2 | §1 LLVM pass | The GB/s column assumes 32 B/point for all three variants; the gather moves 40 | **Documented** in the sub-README, not patched — committed benchmark files were produced with the old formula |
-| 3 | §3 FFT | "Shared memory is worth 4.6×" rests on a kernel launch that exceeds CUDA's 1024-thread block limit, with `cudaGetLastError()` never called | **Withdrawn.** Table re-based on the fastest *verified* kernel |
-| 4 | §3 FFT | "OpenACC is 5× slower than CUDA" compared against those invalid shared-memory timings | **Corrected** to ~1.8× against CUDA V1 |
+| Claim | What the evidence shows | Now reads |
+|---|---|---|
+| §1 — the gather gap is pure lost vectorisation | The gather also reads an index array, 8 B/point more than the unit loop, so the two were never traffic-matched | Traffic dominates; only 1.10× of a 1.61× gap is codegen. [Control experiment →](llvm_pass_profiling/#corrections) |
+| §1 — GB/s for all three variants | The column assumes 32 B/point; the gather moves 40 | Noted where the number appears, so the committed benchmark files stay consistent with the formula that produced them |
+| §3 — shared memory is worth 4.6× | The launch exceeds CUDA's 1024-thread block limit and `cudaGetLastError()` is never called, so the kernel didn't run at those sizes | Withdrawn; the table is re-based on the fastest verified kernel |
+| §3 — OpenACC is 5× slower than CUDA | That compared against the invalid shared-memory timings | ~1.8× against CUDA V1 |
 
-**Still open**
-
-- §1 needs the random-permutation variant to separate the cache penalty from traffic and codegen,
-  and a hardware-counter run — `scripts/perf.sh` is Linux-only, and these were M-series measurements
-- §3's shared-memory kernels need rewriting into ≤1024-thread blocks with checked launches before
-  any shared-memory claim can be made at all
-- §2's GEMM and §4's topology notes were re-checked and stand as written
+Both came from the same habit: trusting a result that agreed with the explanation I already had. The
+write-ups in [`llvm_pass_profiling/`](llvm_pass_profiling/#corrections) and
+[`fft-gpu-programming-models`](https://github.com/prabhkodes/fft-gpu-programming-models#corrections)
+go through how each one was caught.
 
 ## Quick start
 

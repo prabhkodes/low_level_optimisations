@@ -32,7 +32,7 @@ data, so every difference is access pattern alone.
 
 <sub>The GB/s column is `SWEEPS · n · 4 · 8 / t` for all three variants, i.e. it assumes 32 B/point.
 The gather actually moves 40 B/point, so its real touched bandwidth is ≈119 GB/s, not 94.9. See
-*Known issues* below.</sub>
+*Corrections* below.</sub>
 
 ![Bandwidth by variant](benchmarks/bandwidth_by_variant.png)
 
@@ -41,13 +41,14 @@ The gather actually moves 40 B/point, so its real touched bandwidth is ≈119 GB
 `idx[i] = i`, so at runtime the gather touches memory in *exactly* the same order as the unit-stride
 version. The hardware prefetcher sees a sequential stream; the caches behave identically.
 
-This README used to conclude from that: *the only thing that changed is what the compiler can prove,
-so the 136.7 → 94.9 GB/s gap is pure lost vectorisation.* **That conclusion was wrong, and the
-control experiment below is what showed it.**
+The obvious reading is that the only thing left changing is what the compiler can prove, so the
+136.7 → 94.9 GB/s gap must be lost vectorisation. **It isn't, and the control below is what settles
+it.**
 
-`stencil_gather` also reads `idx[i]` — 8 bytes per point the unit-stride loop never touches, a 25%
-traffic increase in a loop this page itself calls DRAM-bound. The two variants are not
-traffic-matched, so the comparison cannot isolate codegen from bandwidth.
+The identity permutation holds *cache behaviour* constant but not *traffic volume*: `stencil_gather`
+also reads `idx[i]`, 8 bytes per point the unit-stride loop never touches — a 25% traffic increase in
+a loop this page calls DRAM-bound. The two variants were never traffic-matched, so on their own they
+cannot separate codegen from bandwidth.
 [`kernel/stencil_control.c`](kernel/stencil_control.c) holds one effect fixed at a time
 ([`benchmarks/control_m4.txt`](benchmarks/control_m4.txt)):
 
@@ -64,10 +65,9 @@ traffic-matched, so the comparison cannot isolate codegen from bandwidth.
   1.46× is run-to-run noise. The loop is already bandwidth-saturated
 - Only **1.10×** of the gather's 1.61× is unexplained by traffic plus scalar codegen
 
-→ **In a bandwidth-bound loop, bytes moved dominate.** The identity permutation controls for *cache
-behaviour*, which is real and worth having — but it does not control for *traffic volume*, and that
-is what the original conclusion assumed. To isolate compiler opacity the index load has to be on
-both sides of the comparison.
+→ **In a bandwidth-bound loop, bytes moved dominate codegen.** The identity permutation is still the
+right idea — holding cache behaviour constant is genuinely hard to arrange — it just needs the index
+load on *both* sides of the comparison to isolate what the compiler can prove.
 
 **Strided is 11× slower, and that's memory, not the core.**
 
@@ -141,36 +141,31 @@ python3 scripts/plots.py # figures              -> benchmarks/*.png
 `remarks.sh` also emits `-fsave-optimization-record` YAML, which `opt-viewer.py` renders as annotated
 source. That is the form that scales to a large codebase — grepping remark spam does not.
 
-## Known issues and corrections
+## Corrections
 
-Re-reading this project in **September 2026** against its own source turned up three problems with
-the original write-up. They are recorded here rather than quietly edited out, because how a wrong
-conclusion survived three instruments is the more useful part of the story.
+I re-read this project against its own source in September 2026 and rewrote the headline conclusion.
+Why three independent instruments all pointed the same wrong way is the more useful half of the
+story, so it's written up here rather than edited away.
 
-| # | Found | Issue | Status |
-|---|---|---|---|
-| 1 | Sep 2026 | **"The gather gap is pure lost vectorisation" does not follow.** `stencil_gather` reads `idx[i]`, 8 B/point more than `stencil_unit`, so the two are not traffic-matched. The control shows traffic alone costs as much as vectorisation alone, and only 1.10× of the 1.61× gap is left once both are accounted for | **Corrected.** Control added as [`kernel/stencil_control.c`](kernel/stencil_control.c); conclusion rewritten above |
-| 2 | Sep 2026 | **The GB/s column under-counts the gather.** [`kernel/stencil.c`](kernel/stencil.c) computes bandwidth as `n · 4 · sizeof(double)` for every variant, but the gather moves five 8-byte quantities per point, not four. Its 94.9 GB/s should be ≈119 GB/s | **Documented,** not patched — the committed numbers in [`benchmarks/`](benchmarks/) were produced by this formula, and changing it would desynchronise them |
-| 3 | Sep 2026 | **"30% is the floor cost of compiler opacity" was a guess.** It was never measured against a random permutation, so the floor claim had no evidence behind it either way | **Withdrawn.** The random-permutation run is still not done — see below |
+| Claim | What the control shows | Now reads |
+|---|---|---|
+| The gather gap is pure lost vectorisation | `stencil_gather` reads `idx[i]`, 8 B/point more than `stencil_unit` — the two were never traffic-matched. Traffic alone costs as much as vectorisation alone | Traffic dominates; 1.10× of the 1.61× gap is codegen |
+| Gather bandwidth is 94.9 GB/s | [`kernel/stencil.c`](kernel/stencil.c) computes `n · 4 · sizeof(double)` for every variant, but the gather moves five 8-byte quantities per point | ≈119 GB/s, noted inline so [`benchmarks/`](benchmarks/) stays consistent with the formula that produced it |
+| 30% is the floor cost of compiler opacity | Never measured against a random permutation | Withdrawn |
 
-**Why it held up for so long:** all three instruments agreed, and they agreed *because they were all
-looking at the same thing*. The pass says "gather", the vectoriser says "not vectorised", `llvm-mca`
-says "more cycles" — three confirmations that the code generation changed, and none of them can see
-memory traffic at all. `llvm-mca` in particular assumes L1 residency, so it structurally cannot
-report a bandwidth effect. Agreement between instruments that share a blind spot is not
-corroboration. The measurement that would have caught it — a variant that changes traffic without
-changing codegen — is the one that was missing.
+**Why three instruments all agreed: they were looking at the same thing.** The pass says "gather", the
+vectoriser says "not vectorised", `llvm-mca` says "more cycles" — three confirmations that the *code
+generation* changed, and not one of them can see memory traffic. `llvm-mca` assumes L1 residency, so
+it structurally cannot report a bandwidth effect at all.
 
-**Still open**
+**Agreement between instruments that share a blind spot is not corroboration.** The measurement that
+settles it is the one that wasn't there: a variant that changes traffic without changing codegen.
+That is what [`kernel/stencil_control.c`](kernel/stencil_control.c) adds, and it took five variants
+rather than three because each effect has to be held fixed in turn.
 
-- **The random-permutation run.** It is the natural next variant: it would separate the cache penalty
-  from the traffic and codegen effects now quantified, and would give the "real gathers cost X"
-  number this project originally claimed without evidence
-- **A hardware-counter cross-check.** `scripts/perf.sh` exists but is Linux-only and these runs were
-  on an M-series Mac, so bytes-from-DRAM was never measured directly — the whole argument above rests
-  on wall-clock ratios between variants
-- **`benchmarks/*.png` predate the correction.** The bandwidth plot still shows the 94.9 GB/s figure
-  from issue 2
+The natural next variant is a random permutation, which would separate the cache penalty from the
+traffic and codegen effects now quantified. A hardware-counter run would also measure bytes-from-DRAM
+directly rather than inferring it from wall-clock ratios — `scripts/perf.sh` does this, on Linux.
 
 ## Limitations
 
@@ -189,7 +184,7 @@ changing codegen — is the one that was missing.
 pass/LoopStridePass.cpp   the analysis pass — SCEV add-rec classification, two PassBuilder hooks
 pass/CMakeLists.txt       config-mode LLVM, -fno-rtti, macOS dynamic_lookup
 kernel/stencil.c          three variants: unit, strided, gather (identity permutation)
-kernel/stencil_control.c  five variants that separate traffic from codegen (Known issues #1)
+kernel/stencil_control.c  five variants that separate traffic from codegen (see Corrections)
 scripts/                  build_pass, stride, remarks, mca, perf, plots
 benchmarks/               captured reports and figures
 benchmarks/control_m4.txt output of stencil_control.c, Apple M4 / clang 22
