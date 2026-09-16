@@ -1,0 +1,20 @@
+Control experiment: separating lost vectorisation from extra memory traffic
+in the gather variant of kernel/stencil.c.
+
+Apple M4, Homebrew clang 22.1.8
+clang -O3 -mcpu=native -std=c11 kernel/stencil_control.c
+N = 2^24 doubles, 50 sweeps, best of 3 repeats
+Recorded 2026-09-16
+
+unit              0.1543 s    1.00x unit     32 B/pt    174.0 GB/s touched  checksum 8389146.60468194
+unit_novec        0.2132 s    1.38x unit     32 B/pt    125.9 GB/s touched  checksum 8389146.60468194
+unit_idx          0.2283 s    1.48x unit     40 B/pt    147.0 GB/s touched  checksum 8389146.60468194  (idx summed)
+unit_idx_novec    0.2250 s    1.46x unit     40 B/pt    149.1 GB/s touched  checksum 8389146.60468194  (idx summed)
+gather            0.2485 s    1.61x unit     40 B/pt    135.0 GB/s touched  checksum 8389146.60468194
+
+Interpretation
+  vectorisation benefit at equal traffic   unit_novec / unit          = 1.38x
+  extra-traffic cost at equal codegen      unit_idx / unit            = 1.48x
+  both effects together                    unit_idx_novec / unit      = 1.46x
+  measured gather                          gather / unit              = 1.61x
+  gather beyond traffic+no-vectorisation   gather / unit_idx_novec    = 1.10x

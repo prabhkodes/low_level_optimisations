@@ -41,12 +41,22 @@ All three produce an identical checksum — same arithmetic, same data, so every
 pattern alone.
 
 **The gather uses an identity permutation.** `idx[i] = i`, so at runtime it touches memory in exactly
-the same order as the unit-stride version — same prefetcher behaviour, same cache behaviour. The only
-variable is what the compiler can *prove*.
+the same order as the unit-stride version — same prefetcher behaviour, same cache behaviour.
 
-→ **The 136.7 → 94.9 GB/s gap is pure lost vectorisation, with cache effects held constant.** That
-separation is not obtainable from profiling alone, and 30% is the *floor* cost of compiler opacity —
-a random permutation would pay this plus the cache penalty.
+This used to conclude that the 136.7 → 94.9 GB/s gap was therefore **pure lost vectorisation**.
+A control experiment run in September 2026 showed it isn't: the gather also loads `idx[i]`, 8 B/point
+the unit loop never touches, so the two sides differ in *traffic* as well as codegen.
+
+| Isolated, one effect at a time | Cost |
+|---|---:|
+| Vectorisation, traffic matched at 32 B/point | 1.38× |
+| Traffic, codegen matched (both vectorised) | 1.48× |
+| Gather, beyond traffic + scalar codegen | **1.10×** |
+
+→ **In a DRAM-bound loop, bytes moved dominate codegen.** Once the loop moves 40 B/point, disabling
+the vectoriser costs nothing measurable. The identity permutation controls for cache behaviour,
+which is genuinely useful — it just doesn't control for bandwidth, and the original conclusion
+assumed it did.
 
 → **`llvm-mca` and the stopwatch disagree on the strided case, and the disagreement is the finding.**
 The model says ~8× worse per block; reality says 11× overall. mca assumes an ideal L1-resident core and
@@ -85,15 +95,18 @@ Block-size sweeps, thread scaling and strong/weak scaling plots are in
 
 CPU reference in C, progressively ported to CUDA across three versions, plus OpenACC and cuFFT.
 
-| Implementation | Time at N = 2²³ | vs best CUDA |
+| Implementation | Time at N = 2²³ | vs CUDA V1 |
 |---|---:|---:|
-| cuFFT | ~2 ms | 4.5× faster |
-| CUDA, shared memory | ~9 ms | baseline |
-| CUDA, global memory | ~25 ms | 2.8× slower |
-| OpenACC | ~45 ms | 5× slower |
+| cuFFT | ~2 ms | ~12× faster |
+| CUDA, global memory (V1) | ~25 ms | baseline |
+| OpenACC | ~45 ms | ~1.8× slower |
+| ~~CUDA, shared memory~~ | ~~~9 ms~~ | invalid launch — see below |
 
-→ **Shared memory is worth 4.6×, and directives won't do it for you.** Same lesson as §1 in a different
-register: the compiler needs to be *told* about the memory hierarchy.
+→ **Use a library when one exists; reach for directives to get onto the GPU cheaply.** The
+shared-memory kernels launch `<<<1, N/2, N·16>>>` — one block of N/2 threads, which CUDA rejects above
+1024 — and the launch error was never checked, so at these sizes those timings measured a kernel that
+never ran. The "shared memory is worth 4.6×" conclusion this section used to draw has no
+measurement behind it.
 
 The full six-way comparison, including the P100-vs-V100 study and a caveat about mixed timing methods,
 lives in [`fft-gpu-programming-models`](https://github.com/prabhkodes/fft-gpu-programming-models).
@@ -112,6 +125,27 @@ Covers the placement decisions every job in this repo depends on:
 - GPU affinity, matching ranks to the socket their A100s attach to
 
 ---
+
+## Known issues and corrections
+
+A self-review in **September 2026** re-checked every claim on this page against the committed logs
+and source. Two of the four projects had conclusions the evidence doesn't support. They're listed
+rather than deleted — the mistakes are more instructive than the headline numbers were.
+
+| # | Project | Issue | Status |
+|---|---|---|---|
+| 1 | §1 LLVM pass | "The gather gap is pure lost vectorisation" — the gather also reads an index array, 8 B/point more than the unit loop, so the two aren't traffic-matched | **Corrected.** Control experiment added; see [`llvm_pass_profiling/`](llvm_pass_profiling/#known-issues-and-corrections) |
+| 2 | §1 LLVM pass | The GB/s column assumes 32 B/point for all three variants; the gather moves 40 | **Documented** in the sub-README, not patched — committed benchmark files were produced with the old formula |
+| 3 | §3 FFT | "Shared memory is worth 4.6×" rests on a kernel launch that exceeds CUDA's 1024-thread block limit, with `cudaGetLastError()` never called | **Withdrawn.** Table re-based on the fastest *verified* kernel |
+| 4 | §3 FFT | "OpenACC is 5× slower than CUDA" compared against those invalid shared-memory timings | **Corrected** to ~1.8× against CUDA V1 |
+
+**Still open**
+
+- §1 needs the random-permutation variant to separate the cache penalty from traffic and codegen,
+  and a hardware-counter run — `scripts/perf.sh` is Linux-only, and these were M-series measurements
+- §3's shared-memory kernels need rewriting into ≤1024-thread blocks with checked launches before
+  any shared-memory claim can be made at all
+- §2's GEMM and §4's topology notes were re-checked and stand as written
 
 ## Quick start
 
